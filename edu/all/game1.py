@@ -4,7 +4,6 @@ import mediapipe as mp
 import numpy as np
 import tensorflow as tf
 from PIL import ImageFont, ImageDraw, Image
-import threading
 import time
 
 # 모델 및 데이터 정보

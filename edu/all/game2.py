@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 import tensorflow as tf
 import mediapipe as mp
-import threading
 import time
 from PIL import ImageFont, ImageDraw, Image
 import modules.holistic_module as hm
