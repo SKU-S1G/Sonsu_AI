@@ -86,15 +86,15 @@ def generate_frames():
         # 준비 상태 텍스트 표시
         if not ready_to_predict and _current_question:
             countdown = max(0, int(_warm_up_time - elapsed_since_question))
-            img = draw_text(img, f"준비하세요... {countdown}초", (10, 50), font, (0, 0, 255))
+            # img = draw_text(img, f"준비하세요... {countdown}초", (10, 50), font, (0, 0, 255))
         
-        # 현재 문제 표시
-        if _current_question:
-            img = draw_text(img, f"문제: {_current_question}", (10, 100), font, (255, 255, 0))
+        # 현재 문제 화면 표시
+        #if _current_question:
+            #img = draw_text(img, f"문제: {_current_question}", (10, 100), font, (255, 255, 0))
         
-        # 결과 표시
-        if _game_result:
-            img = draw_text(img, f"결과: {_game_result}", (10, 150), font, (0, 255, 255))
+        # 결과 화면면 표시
+        #if _game_result:
+            #img = draw_text(img, f"결과: {_game_result}", (10, 150), font, (0, 255, 255))
 
         if right_hand_lmList is not None:
             # 손 랜드마크 처리
@@ -133,7 +133,7 @@ def generate_frames():
                         predicted_action = action
                         
                         # 디버깅용 예측 결과 표시
-                        img = draw_text(img, f'예측: {predicted_action} ({confidence:.2f})', (10, 400), font, (255, 255, 255))
+                        # img = draw_text(img, f'예측: {predicted_action} ({confidence:.2f})', (10, 400), font, (255, 255, 255))
                         
                         # 정답 여부 판별
                         if _current_question:

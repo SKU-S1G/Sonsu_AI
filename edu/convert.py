@@ -16,7 +16,7 @@ converter.target_spec.supported_ops = [
 tflite_model = converter.convert()
 
 # 변환된 모델 저장
-with open("final.tflite", "wb") as f:
+with open("last.tflite", "wb") as f:
     f.write(tflite_model)
 
 print("변환 완료: model.tflite 저장됨.")

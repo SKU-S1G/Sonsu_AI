@@ -7,10 +7,13 @@ from PIL import ImageFont, ImageDraw, Image
 import time
 
 # 모델 및 데이터 정보
-model_path = 'final.tflite'  # TFLite 모델 경로
+model_path = 'last.tflite'  # TFLite 모델 경로
 actions = [
     '안녕하세요', '감사합니다', '사랑합니다', '어머니', '아버지', '동생', '잘', '못', '간다', '나',
-    '이름', '만나다', '반갑다', '부탁', '학교', '생일', '월', '일', '나이', '고발', '복습', '학습', '눈치채다', '오다', '말', '곱다'
+    '이름', '만나다', '반갑다', '부탁', '학교', '생일', '월', '일', '나이', '복습', '학습', '눈치', '오다', '말', '곱다',
+    'ㄱ', 'ㄴ', 'ㄷ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅅ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ',
+    'ㅏ', 'ㅑ', 'ㅓ', 'ㅕ', 'ㅗ', 'ㅛ', 'ㅜ', 'ㅠ', 'ㅡ', 'ㅣ',
+    'ㅐ', 'ㅒ', 'ㅔ', 'ㅖ', 'ㅢ', 'ㅚ', 'ㅟ'
 ]  # 학습한 동작 리스트
 seq_length = 30  # 모델 학습 시 사용한 시퀀스 길이
 
@@ -113,7 +116,7 @@ def generate_frames():
         # 준비 상태 텍스트 표시
         if not ready_to_predict and _current_question:
             countdown = max(0, int(_warm_up_time - elapsed_since_question))
-            img = draw_text(img, f"준비하세요... {countdown}초", (10, 50), font, (0, 0, 255))
+            #img = draw_text(img, f"준비하세요... {countdown}초", (10, 50), font, (0, 0, 255))
         
         if joint_list:
             joint_list = np.array(joint_list).flatten()
@@ -124,8 +127,8 @@ def generate_frames():
                 seq.pop(0)
 
             # 예측 수행 (충분한 시간이 지났고, 시퀀스가 충분하고, 마지막 예측으로부터 충분히 시간이 지났을 때)
-            if (ready_to_predict and 
-                len(seq) == seq_length and 
+            if (ready_to_predict and
+                len(seq) == seq_length and
                 current_time - last_prediction_time >= prediction_cooldown):
                 
                 input_data = np.expand_dims(np.array(seq), axis=0).astype(np.float32)
@@ -138,8 +141,8 @@ def generate_frames():
                 confidence = np.max(prediction)
                 
                 # 디버깅용 예측 결과 표시
-                img = draw_text(img, f'예측: {predicted_action} ({confidence:.2f})', (10, 400), font, (255, 255, 255))
-
+                # img = draw_text(img, f'예측: {predicted_action} ({confidence:.2f})', (10, 400), font, (255, 255, 255))
+            
                 # 충분한 신뢰도를 가진 경우에만 정답 판별
                 if confidence >= _min_confidence:
                     color = (0, 255, 0)

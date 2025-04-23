@@ -2,39 +2,27 @@ import cv2
 import mediapipe as mp
 import numpy as np
 import time, os
+from PIL import ImageFont, ImageDraw, Image
+
+# 한글 텍스트 출력 함수
+def draw_korean_text(img, text, position, font_path="malgun.ttf", font_size=40, color=(255, 255, 255)):
+    img_pil = Image.fromarray(img)
+    draw = ImageDraw.Draw(img_pil)
+    font = ImageFont.truetype(font_path, font_size)
+    draw.text(position, text, font=font, fill=color)
+    return np.array(img_pil)
 
 actions = [
-    '안녕하세요',
-    '감사합니다',
-    '사랑합니다',
-    '어머니',
-    '아버지',
-    '동생',
-    '잘',
-    '못',
-    '간다',
-    '나',
-    '이름',
-    '만나다',
-    '반갑다',
-    '부탁',
-    '학교',
-    '생일',
-    '월',
-    '일',
-    '나이',
-    '고발',
-    '복습',
-    '학습',
-    '눈치채다',
-    '오다',
-    '말',
-    '곱다'
-]  # 학습할 수어 동작
-seq_length = 30  # 시퀀스 길이
-secs_for_action = 30  # 각 동작을 30초 동안 촬영
+    '안녕하세요', '감사합니다', '사랑합니다', '어머니', '아버지', '동생', '잘', '못', '간다', '나',
+    '이름', '만나다', '반갑다', '부탁', '학교', '생일', '월', '일', '나이', '고발', '복습', '학습', '눈치', '오다', '말', '곱다',
+    'ㄱ', 'ㄴ', 'ㄷ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅅ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ',
+    'ㅏ', 'ㅑ', 'ㅓ', 'ㅕ', 'ㅗ', 'ㅛ', 'ㅜ', 'ㅠ', 'ㅡ', 'ㅣ',
+    'ㅐ', 'ㅒ', 'ㅔ', 'ㅖ', 'ㅢ', 'ㅚ', 'ㅟ'
+]
+seq_length = 30
+secs_for_action = 30
 
-# MediaPipe Holistic 모델 로드
+# MediaPipe 모델 설정
 mp_holistic = mp.solutions.holistic
 mp_drawing = mp.solutions.drawing_utils
 holistic = mp_holistic.Holistic(
@@ -51,39 +39,52 @@ while cap.isOpened():
         data = []
 
         ret, img = cap.read()
-        img = cv2.flip(img, 1)  # 좌우 반전
-        
-        cv2.putText(img, f'Waiting for collecting {action.upper()} action...', org=(10, 30),
-                    fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=1, color=(255, 255, 255), thickness=2)
+        img = cv2.flip(img, 1)
+
+        # 1. 대기 화면 (동작 이름 표시 + 카운트다운)
+        for countdown in range(5, 0, -1):
+            ret, img = cap.read()
+            img = cv2.flip(img, 1)
+
+            img = draw_korean_text(img, f'{action}', (int(img.shape[1]/2)-100, int(img.shape[0]/2)-50),
+                                   font_size=50, color=(0, 255, 0))
+            img = draw_korean_text(img, f'{countdown}초 후 시작', (int(img.shape[1]/2)-120, int(img.shape[0]/2)+20),
+                                   font_size=30, color=(0, 255, 255))
+
+            cv2.imshow('img', img)
+            cv2.waitKey(1000)
+
+        # 데이터 수집 안내 메시지
+        img = draw_korean_text(img, f'{action} 동작 수집 중...', (10, 30), font_size=30, color=(255, 255, 255))
         cv2.imshow('img', img)
-        cv2.waitKey(10000)
+        cv2.waitKey(1000)
 
         start_time = time.time()
 
         while time.time() - start_time < secs_for_action:
             ret, img = cap.read()
             img = cv2.flip(img, 1)
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            result = holistic.process(img)
-            img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+            img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            result = holistic.process(img_rgb)
+            img = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2BGR)
 
             joint_list = []
 
-            # 왼손 랜드마크 저장 (21개)
+            # 왼손
             if result.left_hand_landmarks:
                 for lm in result.left_hand_landmarks.landmark:
                     joint_list.append([lm.x, lm.y, lm.z])
             else:
-                joint_list.extend([[0, 0, 0]] * 21)  # 손이 없을 경우 0으로 채움
+                joint_list.extend([[0, 0, 0]] * 21)
 
-            # 오른손 랜드마크 저장 (21개)
+            # 오른손
             if result.right_hand_landmarks:
                 for lm in result.right_hand_landmarks.landmark:
                     joint_list.append([lm.x, lm.y, lm.z])
             else:
                 joint_list.extend([[0, 0, 0]] * 21)
 
-            # 몸(상체) 랜드마크 저장 (33개)
+            # 포즈
             if result.pose_landmarks:
                 for lm in result.pose_landmarks.landmark:
                     joint_list.append([lm.x, lm.y, lm.z])
@@ -92,10 +93,9 @@ while cap.isOpened():
 
             if joint_list:
                 joint_list = np.array(joint_list).flatten()
-                joint_list = np.append(joint_list, idx)  # Label 추가
+                joint_list = np.append(joint_list, idx)
                 data.append(joint_list)
 
-            # 랜드마크 시각화
             mp_drawing.draw_landmarks(img, result.left_hand_landmarks, mp_holistic.HAND_CONNECTIONS)
             mp_drawing.draw_landmarks(img, result.right_hand_landmarks, mp_holistic.HAND_CONNECTIONS)
             mp_drawing.draw_landmarks(img, result.pose_landmarks, mp_holistic.POSE_CONNECTIONS)
